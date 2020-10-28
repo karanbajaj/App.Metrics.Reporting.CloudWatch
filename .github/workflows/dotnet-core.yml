@@ -27,3 +27,4 @@ jobs:
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         PROJECT_FILE_PATH: ./App.Metrics.Reporting.CloudWatch.csproj
+        NUGET_KEY: ${{ secrets.NUGET_KEY }}
