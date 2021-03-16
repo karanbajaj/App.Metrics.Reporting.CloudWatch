@@ -22,5 +22,10 @@ namespace App.Metrics.Reporting.CloudWatch
         /// Gets or sets the interval between flushing metrics.
         /// </summary>
         public TimeSpan FlushInterval { get; set; } = TimeSpan.FromSeconds(60);
-    }
+
+        /// <summary>
+        /// Gets or sets the CloudWatch location that will store the metrics.
+        /// </summary>
+        public string CustomMetricNamespace { get; set; } = "App.Metrics";
+	}
 }

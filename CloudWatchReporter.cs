@@ -35,6 +35,8 @@ namespace App.Metrics.Reporting.CloudWatch
         /// <inheritdoc />
         public IMetricsOutputFormatter? Formatter { get; set; }
 
+		public string CustomNamespace { get; set; }
+
         /// <summary>
         ///     Initializes a new instance of the <see cref="CloudWatchReporter"/> class.
         /// </summary>
@@ -54,6 +56,8 @@ namespace App.Metrics.Reporting.CloudWatch
                 ? options.FlushInterval
                 : AppMetricsConstants.Reporting.DefaultFlushInterval;
             Filter = options.Filter;
+
+			CustomNamespace = options.CustomMetricNamespace;
 
             Logger.Info($"Using metrics reporter {nameof(CloudWatchReporter)}. FlushInterval: {FlushInterval}");
         }
@@ -109,7 +113,7 @@ namespace App.Metrics.Reporting.CloudWatch
                 await _client.PutMetricDataAsync(new PutMetricDataRequest
                 {
                     MetricData = data,
-                    Namespace = "App.Metrics"
+                    Namespace = CustomNamespace
                 });
                 Logger.Trace($"Flushed TelemetryClient; {count} records; elapsed: {sw.Elapsed}.");
             }
@@ -195,11 +199,7 @@ namespace App.Metrics.Reporting.CloudWatch
 
             if (source.ReportSetItems)
             {
-                mt.Dimensions = source
-                    .Value
-                    .Items
-                    .Select(x => new Dimension { Name = x.Item, Value = x.Count.ToString() })
-                    .ToList();
+                AddDimensionsFromTags(mt, source);
             }
 
             return mt;
@@ -265,6 +265,16 @@ namespace App.Metrics.Reporting.CloudWatch
             };
 
             return mt;
+        }
+
+        private static void AddDimensionsFromTags(MetricDatum mt, CounterValueSource source)
+        {
+            int a = 0;
+            foreach (string tagName in source.Tags.Keys)
+            {
+                mt.Dimensions.Add(new Dimension { Name = tagName, Value = source.Tags.Values[a] });
+                a++;
+            }
         }
     }
 }
