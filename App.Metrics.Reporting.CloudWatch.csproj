@@ -7,18 +7,18 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Authors>Vitaly Derbin</Authors>
+    <Authors>Karan Bajaj</Authors>
     <Description>CloudWatch App.Metrics reporter</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://app-metrics.io/</PackageProjectUrl>
     <PackageTags>metrics dotnetcore health-check monitoring performance dotnet instrumentation dotnet-core dotnet-standard dotnet-framework cloudwatch aws</PackageTags>
-    <RepositoryUrl>https://github.com/ondator/App.Metrics.Reporting.CloudWatch</RepositoryUrl>
-    <Version>1.0.0</Version>
+    <RepositoryUrl>https://github.com/karanbajaj/App.Metrics.Reporting.CloudWatch</RepositoryUrl>
+    <Version>1.0.1.3</Version>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="App.Metrics.Core" Version="4.1.0" />
-    <PackageReference Include="AWSSDK.CloudWatch" Version="3.5.0.31" />
+    <PackageReference Include="AWSSDK.CloudWatch" Version="3.7.200.22" />
   </ItemGroup>
 
   <ItemGroup>

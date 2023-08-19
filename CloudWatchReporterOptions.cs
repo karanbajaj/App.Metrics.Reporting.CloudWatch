@@ -13,6 +13,15 @@ namespace App.Metrics.Reporting.CloudWatch
         /// </summary>
         public string? Profile { get; set; }
 
+        public string? Region { get; set; }
+
+        public string? AccessKey { get; set; }
+
+        public string? SecretKey { get; set; }
+
+       
+        
+
         /// <summary>
         /// Gets or sets the <see cref="IFilterMetrics" /> to use for just this reporter.
         /// </summary>

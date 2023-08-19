@@ -50,7 +50,7 @@ namespace App.Metrics.Reporting.CloudWatch
                 throw new ArgumentNullException(nameof(options));
             }
 
-            _client = GetClient(options.Profile);
+            _client = GetClient(options);
 
             FlushInterval = options.FlushInterval > TimeSpan.Zero
                 ? options.FlushInterval
@@ -62,19 +62,33 @@ namespace App.Metrics.Reporting.CloudWatch
             Logger.Info($"Using metrics reporter {nameof(CloudWatchReporter)}. FlushInterval: {FlushInterval}");
         }
 
-        private AmazonCloudWatchClient GetClient(string? profile)
+        private AmazonCloudWatchClient GetClient(CloudWatchReporterOptions options)
         {
-            if (profile != null)
+
+            //options.AccessKey is null && options.SecretKey is null && options.Region is null
+            //? options.Profile is null?new AmazonCloudWatchClient():
+            //: new AmazonCloudWatchClient(options.AwsAccessKeyId, options.AwsSecretAccessKey, options.Region);
+            
+            if (options.Profile != null)
             {
                 var chain = new CredentialProfileStoreChain();
-                if (chain.TryGetAWSCredentials(profile, out var awsCredentials))
+                if (chain.TryGetAWSCredentials(options.Profile, out var awsCredentials))
                 {
                     return new AmazonCloudWatchClient(awsCredentials);
                 }
             }
-            return new AmazonCloudWatchClient();
+            else if(options.AccessKey != null && options.SecretKey != null && options.Region != null)
+            {
+                
+                return new AmazonCloudWatchClient(options.AccessKey, options.SecretKey,Amazon.RegionEndpoint.GetBySystemName(options.Region));
+            }
+            else
+            {
+                return new AmazonCloudWatchClient();
+            }
+            throw new Exception("Unable to create AmazonCloudWatchClient");
         }
-
+        
         public void Dispose()
         {
             if (disposed)
@@ -168,15 +182,16 @@ namespace App.Metrics.Reporting.CloudWatch
 
         private static IEnumerable<MetricDatum> Translate(ApdexValueSource source, string contextName, DateTimeOffset now)
         {
+            string metricName = source.IsMultidimensional ? source.MultidimensionalName : source.Name;
             yield return new MetricDatum
             {
-                MetricName = $"{contextName}-{nameof(ApdexValue.Satisfied)}",
+                MetricName = $"{metricName}-{nameof(ApdexValue.Satisfied)}",
                 TimestampUtc = now.UtcDateTime,
                 Value = source.Value.Satisfied
             };
             yield return new MetricDatum
             {
-                MetricName = $"{contextName}-{nameof(ApdexValue.Tolerating)}",
+                MetricName = $"{metricName}-{nameof(ApdexValue.Tolerating)}",
                 TimestampUtc = now.UtcDateTime,
                 Value = source.Value.Tolerating
             };
@@ -190,9 +205,10 @@ namespace App.Metrics.Reporting.CloudWatch
 
         private static MetricDatum Translate(CounterValueSource source, string contextName, DateTimeOffset now)
         {
+            string metricName = source.IsMultidimensional ? source.MultidimensionalName : source.Name;
             var mt = new MetricDatum
             {
-                MetricName = contextName,
+                MetricName = metricName,
                 TimestampUtc = now.UtcDateTime,
                 Value = source.ValueProvider.GetValue(source.ResetOnReporting).Count,
             };
@@ -207,9 +223,10 @@ namespace App.Metrics.Reporting.CloudWatch
 
         private static MetricDatum Translate(HistogramValueSource source, string contextName, DateTimeOffset now)
         {
+            string metricName = source.IsMultidimensional ? source.MultidimensionalName : source.Name;
             var mt = new MetricDatum
             {
-                MetricName = contextName,
+                MetricName = metricName,
                 TimestampUtc = now.UtcDateTime,
                 StatisticValues = new StatisticSet
                 {
@@ -225,9 +242,10 @@ namespace App.Metrics.Reporting.CloudWatch
 
         private static MetricDatum Translate(MeterValueSource source, string contextName, DateTimeOffset now)
         {
+            string metricName = source.IsMultidimensional ? source.MultidimensionalName : source.Name;
             var mt = new MetricDatum
             {
-                MetricName = contextName,
+                MetricName = metricName,
                 TimestampUtc = now.UtcDateTime,
                 Value = source.ValueProvider.GetValue(source.ResetOnReporting).MeanRate,
                 Dimensions = new List<Dimension>
@@ -244,16 +262,20 @@ namespace App.Metrics.Reporting.CloudWatch
 
         private static MetricDatum Translate(TimerValueSource source, string contextName, DateTimeOffset now)
         {
+            string metricName = source.IsMultidimensional ? source.MultidimensionalName : source.Name;
             var mt = new MetricDatum
             {
-                MetricName = contextName,
+                MetricName = metricName,
                 TimestampUtc = now.UtcDateTime,
+                Unit = source.DurationUnit.ToString(),
                 StatisticValues = new StatisticSet
                 {
                     Maximum = source.Value.Histogram.Max,
                     Minimum = source.Value.Histogram.Min,
                     SampleCount = source.Value.Histogram.Count,
-                    Sum = source.Value.Histogram.Sum
+                    Sum = source.Value.Histogram.Sum,
+                    
+
                 },
                 Dimensions = new List<Dimension>
                 {
