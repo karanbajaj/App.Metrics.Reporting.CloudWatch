@@ -155,10 +155,11 @@ namespace App.Metrics.Reporting.CloudWatch
 
             foreach (var source in context.Gauges)
             {
+                string metricName = source.IsMultidimensional ? source.MultidimensionalName : source.Name;
                 var mt = new MetricDatum
                 {
                     Value = source.Value,
-                    MetricName = contextName,
+                    MetricName = metricName,
                     TimestampUtc = now.UtcDateTime
                 };
                 yield return mt;
