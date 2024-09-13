@@ -1,3 +1,4 @@
+using Amazon.Auth.AccessControlPolicy;
 using Amazon.CloudWatch;
 using Amazon.CloudWatch.Model;
 using Amazon.Runtime.CredentialManagement;
@@ -5,6 +6,7 @@ using App.Metrics.Apdex;
 using App.Metrics.Counter;
 using App.Metrics.Filters;
 using App.Metrics.Formatters;
+using App.Metrics.Gauge;
 using App.Metrics.Histogram;
 using App.Metrics.Logging;
 using App.Metrics.Meter;
@@ -155,14 +157,16 @@ namespace App.Metrics.Reporting.CloudWatch
 
             foreach (var source in context.Gauges)
             {
-                string metricName = source.IsMultidimensional ? source.MultidimensionalName : source.Name;
-                var mt = new MetricDatum
-                {
-                    Value = source.Value,
-                    MetricName = metricName,
-                    TimestampUtc = now.UtcDateTime
-                };
-                yield return mt;
+                //string metricName = source.IsMultidimensional ? source.MultidimensionalName : source.Name;
+                //var mt = new MetricDatum
+                //{
+                //    Value = source.Value,
+                //    MetricName = metricName,
+                //    TimestampUtc = now.UtcDateTime
+                //};
+                //AddDimensionsFromTags(mt, source);
+                //yield return mt;
+                yield return Translate(source, contextName, now);
             }
 
             foreach (var source in context.Histograms)
@@ -290,7 +294,30 @@ namespace App.Metrics.Reporting.CloudWatch
             return mt;
         }
 
+        private static MetricDatum Translate(GaugeValueSource source, string contextName, DateTimeOffset now)
+        {
+
+            string metricName = source.IsMultidimensional ? source.MultidimensionalName : source.Name;
+            var mt = new MetricDatum
+            {
+                Value = source.Value,
+                MetricName = metricName,
+                TimestampUtc = now.UtcDateTime,
+            };
+            AddDimensionsFromTags(mt, source);
+            return mt;
+
+        }
         private static void AddDimensionsFromTags(MetricDatum mt, CounterValueSource source)
+        {
+            int a = 0;
+            foreach (string tagName in source.Tags.Keys)
+            {
+                mt.Dimensions.Add(new Dimension { Name = tagName, Value = source.Tags.Values[a] });
+                a++;
+            }
+        }
+        private static void AddDimensionsFromTags(MetricDatum mt, GaugeValueSource source)
         {
             int a = 0;
             foreach (string tagName in source.Tags.Keys)
