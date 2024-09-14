@@ -37,7 +37,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore App.Metrics.Reporting.CloudWatch.csproj
     - name: Build
-      run: dotnet build -c release --no-restore App.Metrics.Reporting.CloudWatch.csproj
+      run: dotnet build --no-restore --configuration Release App.Metrics.Reporting.CloudWatch.csproj
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Pack Project Components 
