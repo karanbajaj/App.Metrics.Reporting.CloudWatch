@@ -36,14 +36,13 @@ jobs:
       run: dotnet restore App.Metrics.Reporting.CloudWatch.csproj
     - name: Build
       run: dotnet build -c release --no-restore App.Metrics.Reporting.CloudWatch.csproj
-    - name: Publish
-      run: |
-        dotnet publish -c Release --version-suffix $GITHUB_RUN_NUMBER  -o ./Publish -r win-x64 --self-contained false  App.Metrics.Reporting.CloudWatch.csproj
+    - name: Pack Project Components 
+      run: dotnet pack --configuration Release Strike.Components.Metrics.csproj -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
 
-    - name: Test
-      run: dotnet test --no-build --verbosity normal App.Metrics.Reporting.CloudWatch.csproj
-    - name: Pack Project 
-      run: dotnet pack --configuration Release App.Metrics.Reporting.CloudWatch.csproj
+    - name: Publish Package Components
+      run: dotnet nuget push  ./bin/Release/*.nupkg --skip-duplicate --source github
+    - name: Publish Package Symbol Components
+      run: dotnet nuget push  ./bin/Release/*.snupkg --skip-duplicate --source github
     
         
     
