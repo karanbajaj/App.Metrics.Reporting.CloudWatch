@@ -30,8 +30,6 @@ jobs:
       run: dotnet --version
     - name: add package source - strike
       run: dotnet nuget add source --username karanbajaj --password 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  --store-password-in-clear-text --name github "https://nuget.pkg.github.com/STRIKE-HEALTH/index.json"
-    - name: add package source - karan
-      run: dotnet nuget add source --username karanbajaj --password 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  --store-password-in-clear-text --name github-karan "https://nuget.pkg.github.com/karanbajaj/index.json"
     - name: package sources
       run: dotnet nuget list source 
     - name: Restore dependencies
