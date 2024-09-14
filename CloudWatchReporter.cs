@@ -216,6 +216,7 @@ namespace App.Metrics.Reporting.CloudWatch
                 MetricName = metricName,
                 TimestampUtc = now.UtcDateTime,
                 Value = source.ValueProvider.GetValue(source.ResetOnReporting).Count,
+                Unit = source.Unit.ToString(),
             };
 
             if (source.ReportSetItems)
@@ -241,6 +242,7 @@ namespace App.Metrics.Reporting.CloudWatch
                     Sum = source.Value.Sum
                 }
             };
+            AddDimensionsFromTags(mt, source);
 
             return mt;
         }
@@ -261,6 +263,7 @@ namespace App.Metrics.Reporting.CloudWatch
                     new Dimension { Name = nameof(source.Value.FifteenMinuteRate), Value = source.ValueProvider.GetValue(source.ResetOnReporting).FifteenMinuteRate.ToString() },
                 }
             };
+            AddDimensionsFromTags(mt, source);
 
             return mt;
         }
@@ -290,7 +293,7 @@ namespace App.Metrics.Reporting.CloudWatch
                     new Dimension { Name = nameof(source.Value.Rate.FifteenMinuteRate), Value = source.Value.Rate.FifteenMinuteRate.ToString() },
                 }
             };
-
+            AddDimensionsFromTags(mt, source);
             return mt;
         }
 
@@ -308,16 +311,9 @@ namespace App.Metrics.Reporting.CloudWatch
             return mt;
 
         }
-        private static void AddDimensionsFromTags(MetricDatum mt, CounterValueSource source)
-        {
-            int a = 0;
-            foreach (string tagName in source.Tags.Keys)
-            {
-                mt.Dimensions.Add(new Dimension { Name = tagName, Value = source.Tags.Values[a] });
-                a++;
-            }
-        }
-        private static void AddDimensionsFromTags(MetricDatum mt, GaugeValueSource source)
+       
+        
+        private static void AddDimensionsFromTags<T>(MetricDatum mt, MetricValueSourceBase<T> source)
         {
             int a = 0;
             foreach (string tagName in source.Tags.Keys)
