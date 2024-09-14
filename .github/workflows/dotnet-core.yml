@@ -38,7 +38,7 @@ jobs:
       run: dotnet build -c release --no-restore App.Metrics.Reporting.CloudWatch.csproj
     - name: Publish
       run: |
-        dotnet publish -c Release --version-suffix $GITHUB_RUN_NUMBER  -o ./Publish -r win-x64 --self-contained false /p:PublishSingleFile=true App.Metrics.Reporting.CloudWatch.csproj
+        dotnet publish -c Release --version-suffix $GITHUB_RUN_NUMBER  -o ./Publish -r win-x64 --self-contained false  App.Metrics.Reporting.CloudWatch.csproj
 
     - name: Test
       run: dotnet test --no-build --verbosity normal App.Metrics.Reporting.CloudWatch.csproj
