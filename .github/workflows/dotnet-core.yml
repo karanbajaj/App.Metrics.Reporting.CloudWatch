@@ -1,10 +1,14 @@
-name: .NET Core
+name: .NET
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
+    
+env:
+  APPLICATION: Shasta
+  PACKAGE_VERSION: 1.0.0.1
 
 jobs:
   build:
@@ -12,19 +16,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 3.1.301
-    - name: Install dependencies
-      run: dotnet restore
+        dotnet-version: 6.0.x
+        
+      env:
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+    - name: Display dotnet version
+      run: dotnet --version
+    - name: add package source - strike
+      run: dotnet nuget add source --username karanbajaj --password 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 --store-password-in-clear-text --name github "https://nuget.pkg.github.com/STRIKE-HEALTH/index.json"
+    - name: add package source - karan
+      run: dotnet nuget add source --username karanbajaj --password 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 --store-password-in-clear-text --name github-karan "https://nuget.pkg.github.com/karanbajaj/index.json"
+    - name: package sources
+      run: dotnet nuget list source 
+    - name: Restore dependencies
+      run: dotnet restore App.Metrics.Reporting.CloudWatch.csproj
     - name: Build
-      run: dotnet build --configuration Release --no-restore
-    - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet build -c release --no-restore App.Metrics.Reporting.CloudWatch.csproj
     - name: Publish
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        PROJECT_FILE_PATH: ./App.Metrics.Reporting.CloudWatch.csproj
-        NUGET_KEY: ${{ secrets.NUGET_KEY }}
+      run: |
+        dotnet publish -c Release --version-suffix $GITHUB_RUN_NUMBER  -o ./Publish -r win-x64 --self-contained false /p:PublishSingleFile=true App.Metrics.Reporting.CloudWatch.csproj
+
+    - name: Test
+      run: dotnet test --no-build --verbosity normal App.Metrics.Reporting.CloudWatch.csproj
+    - name: Pack Project 
+      run: dotnet pack --configuration Release App.Metrics.Reporting.CloudWatch.csproj
+    
+        
+    
+    
+    
