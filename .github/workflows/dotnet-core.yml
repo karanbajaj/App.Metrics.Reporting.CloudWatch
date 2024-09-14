@@ -38,9 +38,10 @@ jobs:
       run: dotnet restore App.Metrics.Reporting.CloudWatch.csproj
     - name: Build
       run: dotnet build -c release --no-restore App.Metrics.Reporting.CloudWatch.csproj
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
     - name: Pack Project Components 
-      run: dotnet pack --configuration Release App.Metrics.Reporting.CloudWatch.csproj -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
-
+      run: dotnet pack --configuration Release App.Metrics.Reporting.CloudWatch.csproj 
     - name: Publish Package Components
       run: dotnet nuget push  ./bin/Release/*.nupkg --skip-duplicate --source github
     - name: Publish Package Symbol Components
