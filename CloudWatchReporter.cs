@@ -285,13 +285,13 @@ namespace App.Metrics.Reporting.CloudWatch
                     
 
                 },
-                Dimensions = new List<Dimension>
-                {
-                    new Dimension { Name = nameof(source.Value.Rate.MeanRate), Value = source.Value.Rate.MeanRate.ToString() },
-                    new Dimension { Name = nameof(source.Value.Rate.OneMinuteRate), Value = source.Value.Rate.OneMinuteRate.ToString() },
-                    new Dimension { Name = nameof(source.Value.Rate.FiveMinuteRate), Value = source.Value.Rate.FiveMinuteRate.ToString() },
-                    new Dimension { Name = nameof(source.Value.Rate.FifteenMinuteRate), Value = source.Value.Rate.FifteenMinuteRate.ToString() },
-                }
+                //Dimensions = new List<Dimension>
+                //{
+                //    new Dimension { Name = nameof(source.Value.Rate.MeanRate), Value = source.Value.Rate.MeanRate.ToString() },
+                //    new Dimension { Name = nameof(source.Value.Rate.OneMinuteRate), Value = source.Value.Rate.OneMinuteRate.ToString() },
+                //    new Dimension { Name = nameof(source.Value.Rate.FiveMinuteRate), Value = source.Value.Rate.FiveMinuteRate.ToString() },
+                //    new Dimension { Name = nameof(source.Value.Rate.FifteenMinuteRate), Value = source.Value.Rate.FifteenMinuteRate.ToString() },
+                //}
             };
             AddDimensionsFromTags(mt, source);
             return mt;
