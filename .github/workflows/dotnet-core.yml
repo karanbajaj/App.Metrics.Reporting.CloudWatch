@@ -41,9 +41,9 @@ jobs:
     - name: Pack Project Components 
       run: dotnet pack --configuration Release App.Metrics.Reporting.CloudWatch.csproj 
     - name: Publish Package Components
-      run: dotnet nuget push  ./bin/Release/*.nupkg --api-key ${{secrets.GITHUB_TOKEN}}  --skip-duplicate --source github
+      run: dotnet nuget push  ./bin/Release/*.nupkg --api-key ${{secrets.API_KEY}}  --skip-duplicate --source github
     - name: Publish Package Symbol Components
-      run: dotnet nuget push  ./bin/Release/*.snupkg --api-key ${{secrets.GITHUB_TOKEN}}  --skip-duplicate --source github
+      run: dotnet nuget push  ./bin/Release/*.snupkg --api-key ${{secrets.API_KEY}}  --skip-duplicate --source github
     
         
     
