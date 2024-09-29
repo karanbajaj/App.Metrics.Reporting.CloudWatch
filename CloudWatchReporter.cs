@@ -106,35 +106,42 @@ namespace App.Metrics.Reporting.CloudWatch
         /// <inheritdoc />
         public async Task<bool> FlushAsync(MetricsDataValueSource metricsData, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken.IsCancellationRequested || metricsData == null)
+            try { 
+                if (cancellationToken.IsCancellationRequested || metricsData == null)
+                {
+                    return false;
+                }
+
+                var sw = Stopwatch.StartNew();
+                var now = DateTimeOffset.Now;
+                var count = 0;
+                var data = new List<MetricDatum>();
+                foreach (var ctx in metricsData.Contexts)
+                {
+                    foreach (var mt in TranslateContext(ctx, now))
+                    {
+                        data.Add(mt);
+                        ++count;
+                    }
+                }
+
+                if (count > 0)
+                {
+                    await _client.PutMetricDataAsync(new PutMetricDataRequest
+                    {
+                        MetricData = data,
+                        Namespace = CustomNamespace
+                    });
+                    Logger.Trace($"Flushed TelemetryClient; {count} records; elapsed: {sw.Elapsed}.");
+                }
+
+                return true;
+            }
+            catch (Exception ex)
             {
+                Logger.Error(ex, "Error flushing metrics to CloudWatch");
                 return false;
             }
-
-            var sw = Stopwatch.StartNew();
-            var now = DateTimeOffset.Now;
-            var count = 0;
-            var data = new List<MetricDatum>();
-            foreach (var ctx in metricsData.Contexts)
-            {
-                foreach (var mt in TranslateContext(ctx, now))
-                {
-                    data.Add(mt);                   
-                    ++count;
-                }
-            }
-
-            if (count > 0)
-            {
-                await _client.PutMetricDataAsync(new PutMetricDataRequest
-                {
-                    MetricData = data,
-                    Namespace = CustomNamespace
-                });
-                Logger.Trace($"Flushed TelemetryClient; {count} records; elapsed: {sw.Elapsed}.");
-            }
-
-            return true;
         }
 
         private IEnumerable<MetricDatum> TranslateContext(MetricsContextValueSource ctx, DateTimeOffset now)
@@ -216,7 +223,7 @@ namespace App.Metrics.Reporting.CloudWatch
                 MetricName = metricName,
                 TimestampUtc = now.UtcDateTime,
                 Value = source.ValueProvider.GetValue(source.ResetOnReporting).Count,
-                Unit = source.Unit.ToString(),
+                //Unit = Unit.Items.ToString(),
             };
 
             if (source.ReportSetItems)
