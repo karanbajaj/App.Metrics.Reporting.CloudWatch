@@ -36,5 +36,11 @@ namespace App.Metrics.Reporting.CloudWatch
         /// Gets or sets the CloudWatch location that will store the metrics.
         /// </summary>
         public string CustomMetricNamespace { get; set; } = "App.Metrics";
-	}
+
+        /// <summary>
+        /// Metrics can exceed the max 1mb Size - so page through the metrics using this page size
+        /// </summary>
+        public int PageMetricsCount { get; set; } = 20;
+
+    }
 }

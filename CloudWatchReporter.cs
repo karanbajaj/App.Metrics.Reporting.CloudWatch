@@ -39,6 +39,8 @@ namespace App.Metrics.Reporting.CloudWatch
 
 		public string CustomNamespace { get; set; }
 
+        public int PageMetricsCount { get; set; } = 10;
+
         /// <summary>
         ///     Initializes a new instance of the <see cref="CloudWatchReporter"/> class.
         /// </summary>
@@ -60,6 +62,8 @@ namespace App.Metrics.Reporting.CloudWatch
             Filter = options.Filter;
 
 			CustomNamespace = options.CustomMetricNamespace;
+
+            PageMetricsCount = options.PageMetricsCount;
 
             Logger.Info($"Using metrics reporter {nameof(CloudWatchReporter)}. FlushInterval: {FlushInterval}");
         }
@@ -115,24 +119,39 @@ namespace App.Metrics.Reporting.CloudWatch
                 var sw = Stopwatch.StartNew();
                 var now = DateTimeOffset.Now;
                 var count = 0;
+                
+                //Request size can not exceed 1048576 bytes
+
+                var dataSet = new List<List<MetricDatum>>();
                 var data = new List<MetricDatum>();
+
                 foreach (var ctx in metricsData.Contexts)
                 {
                     foreach (var mt in TranslateContext(ctx, now))
                     {
+                        if(count > 0 && count % PageMetricsCount == 0)
+                        {
+                            dataSet.Add(data);
+                            data = new List<MetricDatum>();
+                        }
                         data.Add(mt);
                         ++count;
                     }
                 }
+                dataSet.Add(data);
 
                 if (count > 0)
                 {
-                    await _client.PutMetricDataAsync(new PutMetricDataRequest
+                    foreach (var d in dataSet)
                     {
-                        MetricData = data,
-                        Namespace = CustomNamespace
-                    });
-                    Logger.Trace($"Flushed TelemetryClient; {count} records; elapsed: {sw.Elapsed}.");
+                        await _client.PutMetricDataAsync(new PutMetricDataRequest
+                        {
+                            MetricData = d,
+                            Namespace = CustomNamespace,
+                        });
+                        Logger.Trace($"Flushed TelemetryClient; {count} records; elapsed: {sw.Elapsed}.");
+                    }
+                    
                 }
 
                 return true;
@@ -178,7 +197,10 @@ namespace App.Metrics.Reporting.CloudWatch
 
             foreach (var source in context.Histograms)
             {
-                yield return Translate(source, contextName, now);
+                if(source.Value.Count>0)
+                    yield return Translate(source, contextName, now);
+                else
+                   Logger.Warn($"Skipping empty histogram {source.Name}");
             }
 
             foreach (var source in context.Meters)
@@ -188,7 +210,11 @@ namespace App.Metrics.Reporting.CloudWatch
 
             foreach (var source in context.Timers)
             {
-                yield return Translate(source, contextName, now);
+                if (source.Value.Histogram.Count > 0)
+                    yield return Translate(source, contextName, now);
+                else
+                    Logger.Warn($"Skipping empty histogram {source.Name}");
+               
             }
         }
 
